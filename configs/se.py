@@ -137,6 +137,9 @@ Options.addSEOptions(parser)
 if "--ruby" in sys.argv:
     Ruby.define_options(parser)
 
+parser.add_argument("--itb-size", type=str, default="64")
+parser.add_argument("--dtb-size", type=str, default="64")
+
 args = parser.parse_args()
 
 multiprocesses = []
@@ -264,6 +267,13 @@ for i in range(np):
 
     system.cpu[i].createThreads()
 
+# Change TLB sizes (default = 64)
+for cpu in system.cpu:
+    if hasattr(cpu, "mmu"):
+        cpu.mmu.itb.size = args.itb_size # Instruction TLB
+        cpu.mmu.dtb.size = args.dtb_size # Data TLB
+
+
 if args.ruby:
     Ruby.create_system(args, False, system)
     assert args.num_cpus == len(system.ruby._cpu_ports)
@@ -296,3 +306,5 @@ if args.wait_gdb:
 
 root = Root(full_system=False, system=system)
 Simulation.run(args, root, system, FutureClass)
+import m5
+m5.stats.print_stats()
